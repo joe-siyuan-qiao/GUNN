@@ -10,40 +10,36 @@ local function createModel(opt)
     local stp = {20, 25, 30}
     for i = 1, 3 do cfg[i] = cfg[i] * expansion end
     local model = nn.Sequential()
-    if opt.dataset == 'cifar10' or opt.dataset == 'cifar100' then
-        model:add(cudnn.SpatialConvolution(3, 64, 3, 3, 1, 1, 1, 1))
-        model:add(cudnn.SpatialBatchNormalization(64))
-        model:add(cudnn.ReLU(true))
-        -- 
-        model:add(cudnn.SpatialConvolution(64, cfg[1], 1, 1, 1, 1, 0, 0))
-        model:add(cudnn.SpatialBatchNormalization(cfg[1]))
-        model:add(cudnn.ReLU(true))
-        model:add(nn.GunnLayer(cfg[1], stp[1]))
-        --
-        model:add(cudnn.SpatialConvolution(cfg[1], cfg[2], 1, 1, 1, 1, 0, 0))
-        model:add(cudnn.SpatialBatchNormalization(cfg[2]))
-        model:add(cudnn.ReLU(true))
-        model:add(cudnn.SpatialAveragePooling(2, 2))
-        model:add(nn.GunnLayer(cfg[2], stp[2]))
-        --
-        model:add(cudnn.SpatialConvolution(cfg[2], cfg[3], 1, 1, 1, 1, 0, 0))
-        model:add(cudnn.SpatialBatchNormalization(cfg[3]))
-        model:add(cudnn.ReLU(true))
-        model:add(cudnn.SpatialAveragePooling(2, 2))
-        model:add(nn.GunnLayer(cfg[3], stp[3]))
-        --
-        model:add(cudnn.SpatialConvolution(cfg[3], cfg[3], 1, 1, 1, 1, 0, 0))
-        model:add(cudnn.SpatialBatchNormalization(cfg[3]))
-        model:add(cudnn.ReLU(true))
-        model:add(cudnn.SpatialAveragePooling(8, 8))
-        model:add(nn.Reshape(cfg[3]))
-    end
+    model:add(cudnn.SpatialConvolution(3, 64, 3, 3, 1, 1, 1, 1))
+    model:add(cudnn.SpatialBatchNormalization(64))
+    model:add(cudnn.ReLU(true))
+    -- 
+    model:add(cudnn.SpatialConvolution(64, cfg[1], 1, 1, 1, 1, 0, 0))
+    model:add(cudnn.SpatialBatchNormalization(cfg[1]))
+    model:add(cudnn.ReLU(true))
+    model:add(nn.GunnLayer(cfg[1], stp[1], opt))
+    --
+    model:add(cudnn.SpatialConvolution(cfg[1], cfg[2], 1, 1, 1, 1, 0, 0))
+    model:add(cudnn.SpatialBatchNormalization(cfg[2]))
+    model:add(cudnn.ReLU(true))
+    model:add(cudnn.SpatialAveragePooling(2, 2))
+    model:add(nn.GunnLayer(cfg[2], stp[2], opt))
+    --
+    model:add(cudnn.SpatialConvolution(cfg[2], cfg[3], 1, 1, 1, 1, 0, 0))
+    model:add(cudnn.SpatialBatchNormalization(cfg[3]))
+    model:add(cudnn.ReLU(true))
+    model:add(cudnn.SpatialAveragePooling(2, 2))
+    model:add(nn.GunnLayer(cfg[3], stp[3], opt))
+    --
+    model:add(cudnn.SpatialConvolution(cfg[3], cfg[3], 1, 1, 1, 1, 0, 0))
+    model:add(cudnn.SpatialBatchNormalization(cfg[3]))
+    model:add(cudnn.ReLU(true))
+    model:add(cudnn.SpatialAveragePooling(8, 8))
+    model:add(nn.Reshape(cfg[3]))
     if opt.dataset == 'cifar10' then
         model:add(nn.Linear(cfg[3], 10))
     elseif opt.dataset == 'cifar100' then
         model:add(nn.Linear(cfg[3], 100))
-    elseif opt.dataset == 'imagenet' then
-        model:add(nn.Linear(256, 1000))
     end
     --Initialization following ResNet
     local function ConvInit(name)

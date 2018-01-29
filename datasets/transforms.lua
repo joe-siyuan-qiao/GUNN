@@ -289,4 +289,29 @@ function M.ColorJitter(opt)
    return M.RandomOrder(ts)
 end
 
+function M.Jigsaw()
+   return function(input)
+      c, h, w = input:size(1), input:size(2), input:size(3)
+      if torch.uniform() < 1/3 then
+          return input
+      end
+      if torch.uniform() < 0.5 then
+         d = torch.random(1, w)
+         if d < w then
+            l, r = input:narrow(3, 1, d):clone(), input:narrow(3, d + 1, w - d):clone()
+            input:narrow(3, 1, w - d):copy(r)
+            input:narrow(3, w - d + 1, d):copy(l)
+         end
+      else
+         d = torch.random(1, h)
+         if d < h then
+            u, b = input:narrow(2, 1, d):clone(), input:narrow(2, d + 1, h - d):clone()
+            input:narrow(2, 1, h - d):copy(b)
+            input:narrow(2, h - d + 1, d):copy(u)
+         end
+      end
+      return input
+   end
+end
+
 return M

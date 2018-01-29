@@ -1,11 +1,10 @@
 require 'nn'
 require 'cunn'
 require 'cudnn'
-local nninit = require 'nninit'
 
 local GunnLayer, parent = torch.class('nn.GunnLayer', 'nn.Container')
 
-function GunnLayer:__init(nChannels, nSegments)
+function GunnLayer:__init(nChannels, nSegments, opt)
     parent.__init(self)
     self.train = true
     assert(nChannels % nSegments == 0)
@@ -21,13 +20,17 @@ function GunnLayer:__init(nChannels, nSegments)
         convLayer:add(cudnn.ReLU(true))
         convLayer:add(cudnn.SpatialConvolution(oChannels * 2, oChannels, 1, 1, 1, 1, 0, 0))
         convLayer:add(cudnn.SpatialBatchNormalization(oChannels))
-        local shortcut = nn.Sequential()
-        shortcut:add(cudnn.SpatialConvolution(nChannels, oChannels, 1, 1, 1, 1, 0, 0))
-        shortcut:add(cudnn.SpatialBatchNormalization(oChannels))
-        local module = nn.Sequential()
-        module:add(nn.ConcatTable():add(shortcut):add(convLayer))
-        module:add(nn.CAddTable(true))
-        table.insert(self.modules, module)
+        if opt.dataset == 'imagenet' then
+            table.insert(self.modules, convLayer)
+        else
+            local shortcut = nn.Sequential()
+            shortcut:add(cudnn.SpatialConvolution(nChannels, oChannels, 1, 1, 1, 1, 0, 0))
+            shortcut:add(cudnn.SpatialBatchNormalization(oChannels))
+            local module = nn.Sequential()
+            module:add(nn.ConcatTable():add(shortcut):add(convLayer))
+            module:add(nn.CAddTable(true))
+            table.insert(self.modules, module)
+        end
     end
     self.inputContiguous = torch.CudaTensor()
     self.inputTable = {}
